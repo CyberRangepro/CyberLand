@@ -1,0 +1,20 @@
+
+import os
+Import('env')
+
+lib_name='cyperland_core'
+
+# Sources to generate the library
+source_files=[
+    'CyperLand.cpp'
+]
+
+# Build library
+env.StaticLibrary(lib_name, source_files)
+
+# Build daemon
+env.Prepend(LIBS=[
+    'ltinyxml2'
+])
+
+env.Program('main.cpp')

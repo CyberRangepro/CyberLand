@@ -1,0 +1,9 @@
+Import('env')
+
+import os
+
+exit_code = os.system("./build.sh")
+
+if exit_code != 0:
+    print("build.sh failed!")
+    Exit(1)
