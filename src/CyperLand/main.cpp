@@ -4,6 +4,7 @@
 #include <xmlrpc-c/base.hpp>
 #include <xmlrpc-c/registry.hpp>
 #include <xmlrpc-c/server_abyss.hpp>
+#include "CyberLand.hpp"
 class RequestManagerVirtualMachine : public xmlrpc_c::method {
 private:
   /* data */

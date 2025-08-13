@@ -1,5 +1,7 @@
 #pragma once
 
+/*
+
 #include <xmlrpc-c/base.hpp>
 #include <xmlrpc-c/registry.hpp>
 #include <xmlrpc-c/server_abyss.hpp>
@@ -129,3 +131,5 @@ private:
 
   int setup_socket();
 };
+
+*/

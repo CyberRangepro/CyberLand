@@ -289,9 +289,41 @@ class NetworkDesigner {
   }
 }
 
+class xmlRPCservice {
+  async sendXmlRpcVia(method, params = []) {
+    try {
+      const response = await fetch('http://localhost:3000/xmlrpc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method, params })
+      });
+
+      // تحقق من حالة الاستجابة (مثلاً 500 Internal Server Error)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        console.error('XML-RPC Error:', data.error);
+      } else {
+        console.log('XML-RPC Result:', data.result);
+      }
+    } catch (err) {
+      console.error('Fetch Error:', err.message);
+      // هنا سيظهر الخطأ إذا كان:
+      // - السيرفر معطّل (fetch failed)
+      // - استجابة غير صالحة
+      // - مشكلة في الشبكة
+    }
+  }
+}
+
 // === فئة: Device ===
 class Device {
   constructor(id, type, x, y, designer) {
+    this.RPCservice = new xmlRPCservice();
     this.id = id;
     this.type = type;
     this.x = x;
@@ -301,10 +333,10 @@ class Device {
 
     this.el = this.createElement(x, y);
     this.designer.workspace.appendChild(this.el);
-
     this.enableDrag();
     this.addEventListeners();
     this.createLabel();
+
   }
   createLabel() {
     this.label = document.createElement('div');
@@ -315,7 +347,7 @@ class Device {
 
   generateName() {
     const names = {
-     router: 'router',
+      router: 'router',
       switch: 'switch',
       pc: 'pc',
       server: 'server',
@@ -362,6 +394,7 @@ class Device {
     el.className = 'device-icon animated';
     el.dataset.id = this.id;
     el.dataset.type = this.type;
+
     Object.assign(el.style, {
       position: 'absolute',
       left: x + 'px',
@@ -371,7 +404,7 @@ class Device {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      opacity: '0',
+      opacity: '1',
       zIndex: 10,
       borderRadius: '12px',
       background: 'white',
@@ -379,16 +412,9 @@ class Device {
       userSelect: 'none'
     });
 
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'device-loading';
-    const spinner = document.createElement('div');
-    spinner.className = 'device-loading-spinner';
-    loadingDiv.appendChild(spinner);
-    el.appendChild(loadingDiv);
-
     const i = document.createElement('i');
     i.style.fontSize = '26px';
-    i.style.opacity = '0';
+    i.style.opacity = '1';
     i.style.transition = 'opacity 0.3s ease';
 
     const iconMap = {
@@ -402,14 +428,59 @@ class Device {
       cable: 'fas fa-plug cable-icon'
     };
     i.className = iconMap[this.type] || 'fas fa-question';
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'device-loading';
+    Object.assign(loadingDiv.style, {
+      position: 'absolute',
+      top: '0',
+      left: '0',
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'rgba(255, 255, 255, 0.5)',
+      zIndex: '2'
+    });
 
+    const spinner = document.createElement('div');
+    spinner.className = 'device-loading-spinner';
+    loadingDiv.appendChild(spinner);
+    el.appendChild(loadingDiv);
+    setTimeout(async () => {
+      await this.RPCservice.sendXmlRpcVia("vm.clone", this.type);
+
+      const loading = this.el.querySelector('.device-loading');
+      const icon = this.el.querySelector('i');
+
+      if (loading) loading.remove(); // إزالة علامة التحميل
+      if (icon) icon.style.opacity = '1';
+    }, 2000);
     el.appendChild(i);
-    this.simulateCreation(el, loadingDiv, i);
-
     return el;
   }
 
-  simulateCreation(el, loadingDiv, icon) {
+  CreateDevice() { // استقبل الأيقونة
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'device-loading';
+    Object.assign(loadingDiv.style, {
+      position: 'absolute',
+      top: '0',
+      left: '0',
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'rgba(255, 255, 255, 0.5)',
+      zIndex: '2'
+    });
+
+    const spinner = document.createElement('div');
+    spinner.className = 'device-loading-spinner';
+    loadingDiv.appendChild(spinner);
+    this.el.appendChild(loadingDiv);
+
     const willFail = Math.random() < 0.3;
     const creationTime = 1500 + Math.random() * 1000;
 
@@ -420,7 +491,10 @@ class Device {
         this.handleCreationSuccess(el, loadingDiv, icon);
       }
     }, creationTime);
+
+    return el;
   }
+
 
   handleCreationFailure(el, loadingDiv) {
     loadingDiv.remove();

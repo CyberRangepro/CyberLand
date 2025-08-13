@@ -1,1 +1,42 @@
 .vscode/
+class xmlRPCservice {
+
+  sendXmlRpcVia(method, params = []) {
+    try {
+      alert('xml');      const response = fetch('http://localhost:3000/xmlrpc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ method, params })
+      });
+
+      const data = response.json();
+      if (data.error) {
+        console.error('XML-RPC Error:', data.error);
+      } else {
+        console.log('XML-RPC Result:', data.result);
+      }
+    } catch (err) {
+      console.error('Fetch Error:', err);
+    }
+  }
+} شوف لديهاذا 
+واستخدمه عن طريقه 
+this.RPCservice = new xmlRPCservice();
+this.RPCservice.sendXmlRpcVia("vm.clone",this.type)
+app.post('/xmlrpc', (req, res) => {
+  const { method, params } = req.body;
+
+  console.log(`[Node.js] استقبال طلب: ${method}`, params);
+
+  // تنفيذ الطلب على سيرفر C++
+  cppClient.methodCall(method, [params], (err, value) => {
+    if (err) {
+      console.error("[Node.js] خطأ في الاتصال بـ C++:", err);
+      return res.json({ error: `فشل في الاتصال بالسيرفر: ${err.message}` });
+    }
+
+    console.log("[Node.js] الرد من C++:", value);
+    res.json({ result: value });
+  });
+}); مفروض اذا خاد c++طافئ يرد       return res.json({ error: `فشل في الاتصال بالسيرفر: ${err.message}` }); لاكنه يظهر فقط 2025-08-13T16:50:42.050Z - POST /xmlrpc 
+2025-08-13T16:50:52.464Z - POST /xmlrpc مع انه طافئ

@@ -1,4 +1,6 @@
 
+
+"""
 import os
 Import('env')
 
@@ -18,3 +20,5 @@ env.Prepend(LIBS=[
 ])
 
 env.Program('main.cpp')
+"""
+g++ main.cpp -o main
